@@ -37,7 +37,3 @@ else
     export rdns
     echo "Host $HOST resolves to IP: $ip which resolves back to $rdns"
 fi
-    # it's not an IP Address
-
-
-
