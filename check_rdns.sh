@@ -1,0 +1,25 @@
+#!/bin/zsh
+
+# Check that a given host resolves to an IP and it resovles back to the same thing.
+#
+
+HOST=$1
+
+if [[ -z "$HOST" ]] ; then
+    echo "You need to specify a host" >&2
+    exit 1
+fi
+
+export ip=$(getent hosts $HOST | awk '{print $1}') 
+if [[ "$?" != "0" ]]  ; then
+    echo "Could not find forward DNS for host $HOST" >&2
+    exit 1
+fi
+
+export rdns=$(getent hosts $ip | awk '{print $2}') 
+if [[ "$?" != "0" ]]  ; then
+    echo "Could not find reverse DNS for host $HOST with IP $ip" >&2
+    exit 1
+fi
+
+echo "Host $HOST resolves to IP: $ip which resolves back to $rdns"
