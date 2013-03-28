@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Stolen from Jonathan Wright
+
+USER="$(whoami)"
+CHROOT=${1%\/}
+umask=002
+
+if [ -z "$1" ]; then
+  echo "ERROR: No chroot directory provided."
+  exit 1
+fi
+
+if [ ! -d "$CHROOT" ]; then
+  echo "ERROR: $CHROOT is not a directory."
+  exit 2
+fi
+
+if [ "$(whoami)" == "root" ]; then
+  echo "ERROR: Please do not run as root"
+  exit 3
+fi
+
+echo "Starting chroot environment in $(pwd)/$CHROOT/..."
+echo "  (please enter sudo password if requested)"
+echo ""
+
+if [ ! -e $CHROOT/etc/debian_chroot ]; then
+  echo ">> naming chroot environment..."
+  sudo touch $CHROOT/etc/debian_chroot
+  sudo chmod 666 $CHROOT/etc/debian_chroot
+  echo "$CHROOT" > $CHROOT/etc/debian_chroot
+fi
+
+if [ ! -d $CHROOT/home/$USER ]; then
+  echo ">> creating home directory..."
+  sudo mkdir $CHROOT/home/$USER
+  sudo chown $USER $CHROOT/home/$USER
+fi
+
+echo ">> moving .bashrc & user files..."
+cp ~/.bash* $CHROOT/home/$USER/
+cp -Lr ~/.zsh* $CHROOT/home/$USER/
+sudo chown $USER $CHROOT/home/$USER/.bash*
+sudo chown $USER $CHROOT/home/$USER/.zsh*
+# This might fail because we might not have those users in the chroot
+sudo cp /etc/{passwd,group,shadow,mtab} $CHROOT/etc/
+
+echo ">> moving .vimrc and .vim/ files and folders..."
+cp -rL ~/.vimrc ~/.vim/ $CHROOT/home/$USER/
+sudo chown $USER $CHROOT/home/$USER/.vim*
+
+for DIR in dev proc selinux sys
+do
+  [[ ! -d "$CHROOT/$DIR" ]] && continue
+  
+  if [ $(mount | grep -c $CHROOT/$DIR) -eq 0 ]; then
+    echo ">> mounting /$DIR in enviroment..."
+    sudo mount -o bind /$DIR $CHROOT/$DIR
+  fi
+done
+
+echo ">> moving into new environment..."
+sleep 1
+echo ""
+
+cd $CHROOT
+sudo chroot .
+
+cd ..
