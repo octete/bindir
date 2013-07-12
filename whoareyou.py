@@ -29,6 +29,7 @@ def determine_identity():
             except (ValueError, binascii.Error):
                 continue
             if fingerprint in agent_fingerprints:
+                # We exit at the first match
                 return comment
     except IOError:
         # no file, we ignore

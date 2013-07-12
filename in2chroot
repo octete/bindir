@@ -40,7 +40,11 @@ fi
 
 echo ">> moving .bashrc & user files..."
 cp ~/.bash* $CHROOT/home/$USER/
-cp -Lr ~/.zsh* $CHROOT/home/$USER/
+cp ~/.quilt-dpkg $CHROOT/home/$USER/
+cp ~/.debianrc $CHROOT/home/$USER/
+cp -Lr ~/.zshrc $CHROOT/home/$USER/
+cp -Lr ~/.zsh $CHROOT/home/$USER/
+
 sudo chown $USER $CHROOT/home/$USER/.bash*
 sudo chown $USER $CHROOT/home/$USER/.zsh*
 # This might fail because we might not have those users in the chroot
